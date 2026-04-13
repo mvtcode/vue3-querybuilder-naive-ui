@@ -319,12 +319,12 @@ describe('QueryBuilder.vue', () => {
     await nextTick()
     await wrapper.find('[data-test="add-rule"]').trigger('click')
     await nextTick()
-    
+
     // Change to 'age'
     await triggerNSelectUpdate(wrapper, 'field-select', 'age')
     await nextTick()
     await nextTick()
-    
+
     const inputNumber = wrapper.findComponent(NInputNumber)
     expect(inputNumber.exists()).toBe(true)
   })
@@ -334,12 +334,12 @@ describe('QueryBuilder.vue', () => {
     await nextTick()
     await wrapper.find('[data-test="add-rule"]').trigger('click')
     await nextTick()
-    
+
     // Change to 'birthdate'
     await triggerNSelectUpdate(wrapper, 'field-select', 'birthdate')
     await nextTick()
     await nextTick()
-    
+
     const datePicker = wrapper.findComponent(NDatePicker)
     expect(datePicker.exists()).toBe(true)
   })
@@ -349,12 +349,12 @@ describe('QueryBuilder.vue', () => {
     await nextTick()
     await wrapper.find('[data-test="add-rule"]').trigger('click')
     await nextTick()
-    
+
     // Change to 'active'
     await triggerNSelectUpdate(wrapper, 'field-select', 'active')
     await nextTick()
     await nextTick()
-    
+
     const checkbox = wrapper.findComponent(NCheckbox)
     expect(checkbox.exists()).toBe(true)
   })
@@ -364,12 +364,12 @@ describe('QueryBuilder.vue', () => {
     await nextTick()
     await wrapper.find('[data-test="add-rule"]').trigger('click')
     await nextTick()
-    
+
     // Change to 'status'
     await triggerNSelectUpdate(wrapper, 'field-select', 'status')
     await nextTick()
     await nextTick()
-    
+
     // There are 3 NSelects now: field, operator, and the value input
     const selects = wrapper.findAllComponents(NSelect)
     expect(selects.length).toBe(3)
@@ -378,13 +378,13 @@ describe('QueryBuilder.vue', () => {
   it('shows validation message when maxOccurrences is reached', async () => {
     const wrapper = createWrapper()
     await nextTick()
-    
+
     // Add first 'limited' rule
     await wrapper.find('[data-test="add-rule"]').trigger('click')
     await nextTick()
     await triggerNSelectUpdate(wrapper, 'field-select', 'limited')
     await nextTick()
-    
+
     const validationInfo = wrapper.find('.validation-info')
     expect(validationInfo.exists()).toBe(true)
     expect(validationInfo.text()).toContain('1')

@@ -1,8 +1,4 @@
-import type {
-  QueryBuilderFilter,
-  QueryBuilderGroup,
-  QueryBuilderRule,
-} from '../types/querybuilder'
+import type { QueryBuilderFilter, QueryBuilderGroup, QueryBuilderRule } from '../types/querybuilder'
 import { FilterType } from '../types/querybuilder'
 import { Operator } from '../types/querybuilder'
 import dayjs from 'dayjs'
@@ -451,9 +447,8 @@ export const toMnpQuery = (group: QueryBuilderGroup, filters: QueryBuilderFilter
       switch (dataType) {
         case FilterType.STRING:
         case FilterType.EMAIL:
-          if (Array.isArray(value)) {
-            value.length &&
-              results.push(`{${field}} ${operatorMnp} ['''${value?.join("''', '''")}''']`)
+          if (Array.isArray(value) && value.length) {
+            results.push(`{${field}} ${operatorMnp} ['''${value?.join("''', '''")}''']`)
           } else {
             results.push(`{${field}} ${operatorMnp} ${toString(value)}`)
           }

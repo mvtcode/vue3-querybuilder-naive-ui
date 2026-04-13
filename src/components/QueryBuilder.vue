@@ -14,12 +14,7 @@
               <template #checked>{{ labelAnd || t('queryBuilder.and') }}</template>
               <template #unchecked>{{ labelOr || t('queryBuilder.or') }}</template>
             </n-switch>
-            <n-button
-              type="primary"
-              @click="addRule"
-              :disabled="!canAddRule"
-              data-test="add-rule"
-            >
+            <n-button type="primary" @click="addRule" :disabled="!canAddRule" data-test="add-rule">
               <template #icon>
                 <n-icon><AddIcon /></n-icon>
               </template>
@@ -94,24 +89,31 @@
             <template v-else>
               <n-flex align="center" :size="[12, 12]" style="padding: 0.5rem 0">
                 <!-- Field select -->
-                  <n-flex vertical :size="[4, 4]">
-                    <n-select
-                      v-model:value="rule.field"
-                      :options="getAvailableFilterOptions(rule.field)"
-                      :style="{ width: `${widthFieldSelect}px` }"
-                      :placeholder="labelSelectField || t('queryBuilder.selectField')"
-                      @update:value="onFieldChange(rule)"
-                      data-test="field-select"
-                    />
-                    <n-text
-                      v-if="getFilter(rule.field)?.maxOccurrences && getOccurrences(rule.field) >= (getFilter(rule.field)?.maxOccurrences || 0)"
-                      depth="3"
-                      type="warning"
-                      style="font-size: 11px; margin-left: 4px"
-                    >
-                      {{ t('queryBuilder.maxOccurrencesReached', { max: getFilter(rule.field)?.maxOccurrences }) }}
-                    </n-text>
-                  </n-flex>
+                <n-flex vertical :size="[4, 4]">
+                  <n-select
+                    v-model:value="rule.field"
+                    :options="getAvailableFilterOptions(rule.field)"
+                    :style="{ width: `${widthFieldSelect}px` }"
+                    :placeholder="labelSelectField || t('queryBuilder.selectField')"
+                    @update:value="onFieldChange(rule)"
+                    data-test="field-select"
+                  />
+                  <n-text
+                    v-if="
+                      getFilter(rule.field)?.maxOccurrences &&
+                      getOccurrences(rule.field) >= (getFilter(rule.field)?.maxOccurrences || 0)
+                    "
+                    depth="3"
+                    type="warning"
+                    style="font-size: 11px; margin-left: 4px"
+                  >
+                    {{
+                      t('queryBuilder.maxOccurrencesReached', {
+                        max: getFilter(rule.field)?.maxOccurrences,
+                      })
+                    }}
+                  </n-text>
+                </n-flex>
                 <!-- end Field select -->
 
                 <!-- Operator select -->
@@ -142,19 +144,19 @@
                       <n-flex align="center" :size="[8, 8]">
                         <component
                           :is="getInputComponent(rule.field)"
-                          v-bind="getInputProps(rule.field)"
-                          :[isDatePicker(rule.field)?'formatted-value':'value']="getValueAtIndex(rule.value, 0)"
+                          v-bind="getDynamicInputProps(rule, 0)"
                           :placeholder="labelFrom || t('queryBuilder.from')"
                           :style="{ width: `${widthValueInput / 2 - 8}px` }"
                           data-test="value-input-from"
                           @update:value="handleValueUpdate(rule, $event, 0)"
                           @update:formatted-value="handleValueUpdate(rule, $event, 0)"
                         />
-                        <n-text depth="3" style="font-size: 0.875rem">{{ labelTo || t('queryBuilder.to') }}</n-text>
+                        <n-text depth="3" style="font-size: 0.875rem">{{
+                          labelTo || t('queryBuilder.to')
+                        }}</n-text>
                         <component
                           :is="getInputComponent(rule.field)"
-                          v-bind="getInputProps(rule.field)"
-                          :[isDatePicker(rule.field)?'formatted-value':'value']="getValueAtIndex(rule.value, 1)"
+                          v-bind="getDynamicInputProps(rule, 1)"
                           :placeholder="labelTo || t('queryBuilder.to')"
                           :style="{ width: `${widthValueInput / 2 - 8}px` }"
                           data-test="value-input-to"
@@ -443,9 +445,15 @@ const getInputProps = (field: string) => {
     inputProps.maxTagCount = 'responsive'
   }
 
-  if (filter.input === 'date' || filter.type === FilterType.DATE || filter.type === FilterType.DATETIME) {
+  if (
+    filter.input === 'date' ||
+    filter.type === FilterType.DATE ||
+    filter.type === FilterType.DATETIME
+  ) {
     inputProps.type = filter.type === FilterType.DATETIME ? 'datetime' : 'date'
-    inputProps.format = filter.validation?.format || (filter.type === FilterType.DATETIME ? 'yyyy-MM-dd HH:mm:ss' : 'yyyy-MM-dd')
+    inputProps.format =
+      filter.validation?.format ||
+      (filter.type === FilterType.DATETIME ? 'yyyy-MM-dd HH:mm:ss' : 'yyyy-MM-dd')
   }
 
   if (
@@ -480,6 +488,15 @@ const getFilteredInputProps = (rule: QueryBuilderRule) => {
     return { ...baseProps, formattedValue: rule.value }
   }
   return { ...baseProps, value: rule.value }
+}
+
+const getDynamicInputProps = (rule: QueryBuilderRule, index: number) => {
+  const baseProps = getInputProps(rule.field)
+  const key = isDatePicker(rule.field) ? 'formattedValue' : 'value'
+  return {
+    ...baseProps,
+    [key]: getValueAtIndex(rule.value, index),
+  }
 }
 
 const getRuleByField = (field: string): QueryBuilderRule | undefined => {
