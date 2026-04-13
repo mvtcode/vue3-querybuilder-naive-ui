@@ -4,6 +4,7 @@ export default {
     addGroup: 'Thêm nhóm',
     removeGroup: 'Xóa nhóm',
     delete: 'Xóa',
+    reset: 'Reset',
     from: 'Từ',
     to: 'Đến',
     value: 'Giá trị',

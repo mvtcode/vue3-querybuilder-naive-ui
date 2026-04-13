@@ -4,6 +4,7 @@ export default {
     addGroup: 'Add Group',
     removeGroup: 'Remove Group',
     delete: 'Delete',
+    reset: 'Reset',
     from: 'From',
     to: 'To',
     value: 'Value',
