@@ -16,6 +16,10 @@
     "url": "git@github.com:mvtcode/vue3-querybuilder-naive-ui.git"
   },
   "private": false,
+  "publishConfig": {
+    "access": "public",
+    "git-checks": false
+  },
   "type": "module",
   "main": "dist/vue3-querybuilder-naive-ui.umd.js",
   "module": "dist/vue3-querybuilder-naive-ui.es.js",
