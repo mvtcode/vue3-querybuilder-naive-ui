@@ -37,6 +37,8 @@ export default {
       not_in: 'Not in',
       between: 'Between',
       not_between: 'Not between',
+      is_null: 'Is null',
+      is_not_null: 'Is not null',
     },
     error: {
       required: 'This field is required',

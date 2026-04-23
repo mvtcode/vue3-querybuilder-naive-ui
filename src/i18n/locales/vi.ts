@@ -37,6 +37,8 @@ export default {
       not_in: 'Không trong danh sách',
       between: 'Trong khoảng',
       not_between: 'Không trong khoảng',
+      is_null: 'NULL',
+      is_not_null: 'Không NULL',
     },
     error: {
       required: 'Trường này là bắt buộc',

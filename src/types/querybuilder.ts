@@ -28,6 +28,8 @@ export enum Operator {
   NOT_IN = 'not_in',
   BETWEEN = 'between',
   NOT_BETWEEN = 'not_between',
+  // IS_NULL = 'is_null',
+  // IS_NOT_NULL = 'is_not_null',
 }
 
 export const OperatorText: Record<Operator, string> = {
@@ -49,6 +51,8 @@ export const OperatorText: Record<Operator, string> = {
   [Operator.NOT_IN]: 'queryBuilder.operators.not_in',
   [Operator.BETWEEN]: 'queryBuilder.operators.between',
   [Operator.NOT_BETWEEN]: 'queryBuilder.operators.not_between',
+  // [Operator.IS_NULL]: 'queryBuilder.operators.is_null',
+  // [Operator.IS_NOT_NULL]: 'queryBuilder.operators.is_not_null',
 }
 
 export type QueryBuilderValue =
@@ -85,7 +89,7 @@ export interface QueryBuilderFilter {
     | Date
     | undefined
     | (string | number | boolean | Date | undefined)[]
-  values?: { value: string | number | boolean; text: string }[]
+  values?: { value: string | number | boolean | Date; text: string }[]
   maxOccurrences?: number
   validation?: {
     min?: number

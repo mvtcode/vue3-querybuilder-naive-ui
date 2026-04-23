@@ -1,31 +1,40 @@
 <!-- eslint-disable @typescript-eslint/no-explicit-any -->
 <template>
   <div class="query-builder" data-test="query-builder">
-    <n-card :bordered="!isRoot" :class="{ 'root-card': isRoot }">
+    <n-card>
       <div class="group">
         <!-- group header -->
-        <n-flex justify="space-between" align="center" style="margin-bottom: 1.5rem">
+        <n-flex justify="space-between" align="center" style="margin-bottom: 1rem">
           <n-flex align="center" :size="[12, 12]">
             <n-switch
               v-model:value="isAndCondition"
               @update:value="onConditionChange"
               data-test="condition-switch"
+              :size="size"
             >
               <template #checked>{{ labelAnd || t('queryBuilder.and') }}</template>
               <template #unchecked>{{ labelOr || t('queryBuilder.or') }}</template>
             </n-switch>
-            <n-button type="primary" @click="addRule" :disabled="!canAddRule" data-test="add-rule">
+            <n-button
+              ghost
+              type="primary"
+              @click="addRule"
+              :disabled="!canAddRule"
+              data-test="add-rule"
+              :size="size"
+            >
               <template #icon>
                 <n-icon><AddIcon /></n-icon>
               </template>
               {{ labelAddRule || t('queryBuilder.addRule') }}
             </n-button>
             <n-button
-              secondary
+              ghost
               type="primary"
               @click="addGroup"
               :disabled="!canAddGroup"
               data-test="add-group"
+              :size="size"
             >
               <template #icon>
                 <n-icon><FolderAddIcon /></n-icon>
@@ -38,6 +47,7 @@
               @click="removeGroup"
               v-if="!isRoot"
               data-test="remove-group"
+              :size="size"
             >
               <template #icon>
                 <n-icon><TrashIcon /></n-icon>
@@ -45,9 +55,9 @@
               {{ labelRemoveGroup || t('queryBuilder.removeGroup') }}
             </n-button>
           </n-flex>
-          <div v-show="isRoot">
+          <!-- <div v-show="isRoot">
             <n-text depth="3" style="font-size: 0.875rem">(version: {{ version }})</n-text>
-          </div>
+          </div> -->
         </n-flex>
         <!-- end group header -->
 
@@ -57,7 +67,8 @@
             <!-- Group rule -->
             <template v-if="isGroup(rule)">
               <QueryBuilder
-                v-model="group.rules[index]"
+                :model-value="asGroup(group.rules[index])"
+                @update:model-value="(val) => (group.rules[index] = val)"
                 :filters="filters"
                 :is-root="false"
                 :max-depth="maxDepth > 0 ? maxDepth - 1 : 0"
@@ -76,9 +87,10 @@
                 :width-field-select="widthFieldSelect"
                 :width-operator-select="widthOperatorSelect"
                 :width-value-input="widthValueInput"
+                :size="size"
                 @remove="removeRule(index)"
               >
-                <template v-for="(_, name) in $slots" #[name]="slotData: any">
+                <template v-for="(_, name) in $slots" #[name]="slotData">
                   <slot :name="name" v-bind="slotData" />
                 </template>
               </QueryBuilder>
@@ -87,104 +99,57 @@
 
             <!-- Rule -->
             <template v-else>
-              <n-flex align="center" :size="[12, 12]" style="padding: 0.5rem 0">
+              <n-flex align="center" :size="[12, 12]" style="padding: 0">
                 <!-- Field select -->
-                <n-flex vertical :size="[4, 4]">
-                  <n-select
-                    v-model:value="rule.field"
-                    :options="getAvailableFilterOptions(rule.field)"
-                    :style="{ width: `${widthFieldSelect}px` }"
-                    :placeholder="labelSelectField || t('queryBuilder.selectField')"
-                    @update:value="onFieldChange(rule)"
-                    data-test="field-select"
-                  />
-                  <n-text
-                    v-if="
-                      getFilter(rule.field)?.maxOccurrences &&
-                      getOccurrences(rule.field) >= (getFilter(rule.field)?.maxOccurrences || 0)
-                    "
-                    depth="3"
-                    type="warning"
-                    style="font-size: 11px; margin-left: 4px"
-                  >
-                    {{
-                      t('queryBuilder.maxOccurrencesReached', {
-                        max: getFilter(rule.field)?.maxOccurrences,
-                      })
-                    }}
-                  </n-text>
-                </n-flex>
+                <n-select
+                  v-model:value="rule.field"
+                  :options="getAvailableFilters(rule.field)"
+                  :style="{ width: `${widthFieldSelect}px` }"
+                  :key="rule.field"
+                  label-field="label"
+                  value-field="field"
+                  :placeholder="labelSelectField || t('queryBuilder.selectField')"
+                  @update:value="onFieldChange(rule)"
+                  data-test="field-select"
+                  :size="size"
+                />
                 <!-- end Field select -->
 
                 <!-- Operator select -->
                 <n-select
                   v-model:value="rule.operator"
-                  :options="getOperatorOptions(rule.field)"
+                  :options="getOperators(rule.field)"
                   :style="{ width: `${widthOperatorSelect}px` }"
+                  label-field="label"
+                  value-field="value"
                   :placeholder="labelSelectOperator || t('queryBuilder.selectOperator')"
                   @update:value="onOperatorChange(rule)"
                   data-test="operator-select"
+                  :size="size"
                 />
                 <!-- end Operator select -->
 
                 <!-- Value input -->
                 <slot
                   :name="rule.field"
-                  :filter="getFilter(rule.field)"
                   :operator="rule.operator"
                   :value="rule.value"
-                  :isBetween="isBetweenOperator(rule.operator)"
+                  :isBetween="[Operator.BETWEEN, Operator.NOT_BETWEEN].includes(rule.operator)"
                   :rule="rule"
                   :index="index"
                   :widthValueInput="widthValueInput"
+                  :size="size"
+                  :filter="mapFields[rule.field]"
+                  v-if="![Operator.IS_EMPTY, Operator.IS_NOT_EMPTY].includes(rule.operator)"
                 >
-                  <n-flex align="center">
-                    <!-- Between Inputs -->
-                    <template v-if="isBetweenOperator(rule.operator)">
-                      <n-flex align="center" :size="[8, 8]">
-                        <component
-                          :is="getInputComponent(rule.field)"
-                          v-bind="getDynamicInputProps(rule, 0)"
-                          :placeholder="labelFrom || t('queryBuilder.from')"
-                          :style="{ width: `${widthValueInput / 2 - 8}px` }"
-                          data-test="value-input-from"
-                          @update:value="handleValueUpdate(rule, $event, 0)"
-                          @update:formatted-value="handleValueUpdate(rule, $event, 0)"
-                        />
-                        <n-text depth="3" style="font-size: 0.875rem">{{
-                          labelTo || t('queryBuilder.to')
-                        }}</n-text>
-                        <component
-                          :is="getInputComponent(rule.field)"
-                          v-bind="getDynamicInputProps(rule, 1)"
-                          :placeholder="labelTo || t('queryBuilder.to')"
-                          :style="{ width: `${widthValueInput / 2 - 8}px` }"
-                          data-test="value-input-to"
-                          @update:value="handleValueUpdate(rule, $event, 1)"
-                          @update:formatted-value="handleValueUpdate(rule, $event, 1)"
-                        />
-                      </n-flex>
-                    </template>
-
-                    <!-- Single Input -->
-                    <template v-else-if="!hasNoValueOperator(rule.operator)">
-                      <component
-                        :is="getInputComponent(rule.field)"
-                        v-bind="getFilteredInputProps(rule)"
-                        :placeholder="labelEnterValue || t('queryBuilder.enterValue')"
-                        :style="{ width: `${widthValueInput}px` }"
-                        clearable
-                        data-test="value-input"
-                        @update:value="handleValueUpdate(rule, $event)"
-                        @update:checked="handleValueUpdate(rule, $event)"
-                        @update:formatted-value="handleValueUpdate(rule, $event)"
-                      >
-                        <template v-if="getFilter(rule.field)?.type === FilterType.BOOLEAN">
-                          {{ getFilter(rule.field)?.label }}
-                        </template>
-                      </component>
-                    </template>
-                  </n-flex>
+                  <n-input
+                    :value="asString(rule.value)"
+                    @update:value="(val) => (rule.value = val)"
+                    :style="{ width: `${widthValueInput}px` }"
+                    :placeholder="labelEnterValue || t('queryBuilder.enterValue')"
+                    clearable
+                    :size="size"
+                  />
                 </slot>
                 <!-- end Value input -->
 
@@ -195,6 +160,7 @@
                   type="error"
                   @click="removeRule(index)"
                   data-test="remove-rule"
+                  :size="size"
                 >
                   <template #icon>
                     <n-icon><TrashIcon /></n-icon>
@@ -213,21 +179,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, watch } from 'vue'
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import {
-  NCard,
-  NSwitch,
-  NButton,
-  NSelect,
-  NInput,
-  NIcon,
-  NInputNumber,
-  NDatePicker,
-  NCheckbox,
-  NFlex,
-  NText,
-} from 'naive-ui'
+import { NCard, NSwitch, NButton, NSelect, NInput, NIcon, NFlex } from 'naive-ui'
 import { Add as AddIcon, FolderOpen as FolderAddIcon, Trash as TrashIcon } from '@vicons/ionicons5'
 import type {
   QueryBuilderGroup,
@@ -237,12 +191,7 @@ import type {
 } from '../types/querybuilder'
 import { FilterType, Operator, OperatorText } from '../types/querybuilder'
 
-import pkg from '../../package.json'
-
-const version = pkg.version
-
 interface Props {
-  modelValue: QueryBuilderGroup | QueryBuilderRule
   filters: QueryBuilderFilter[]
   isRoot?: boolean
   maxDepth?: number
@@ -261,6 +210,7 @@ interface Props {
   widthFieldSelect?: number
   widthOperatorSelect?: number
   widthValueInput?: number
+  size?: 'small' | 'medium' | 'large'
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -269,41 +219,90 @@ const props = withDefaults(defineProps<Props>(), {
   widthOperatorSelect: 180,
   widthValueInput: 250,
   maxDepth: 0,
+  size: 'medium',
 })
 
 const { t } = useI18n()
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', value: QueryBuilderGroup | QueryBuilderRule): void
   (e: 'remove'): void
 }>()
 
-// Map to store previous operator of each rule for transition handling
+const mapFields = computed(() => {
+  return props.filters.reduce(
+    (map, filter) => {
+      map[filter.field] = filter
+      return map
+    },
+    {} as Record<string, QueryBuilderFilter>,
+  )
+})
+
+// Map để lưu trữ operator trước đó của mỗi rule
 const previousOperators = new Map<string, Operator>()
 
-const group = computed<QueryBuilderGroup>(() => {
-  return props.modelValue as QueryBuilderGroup
+const group = defineModel<QueryBuilderGroup>({
+  default: {
+    condition: 'AND',
+    rules: [],
+  },
 })
 
 const isGroup = (rule: QueryBuilderRule | QueryBuilderGroup): rule is QueryBuilderGroup => {
   return 'condition' in rule
 }
 
-watch(
-  () => group.value.rules,
-  (rules) => {
-    rules.forEach((rule) => {
-      if (!isGroup(rule)) {
-        if (rule.operator === Operator.BETWEEN || rule.operator === Operator.NOT_BETWEEN) {
-          if (!Array.isArray(rule.value)) {
-            rule.value = [undefined, undefined]
-          }
-        }
+const asGroup = (rule: QueryBuilderRule | QueryBuilderGroup): QueryBuilderGroup => {
+  return rule as QueryBuilderGroup
+}
+
+const asString = (value: QueryBuilderValue): string => {
+  if (value === null || value === undefined) return ''
+  return String(value)
+}
+
+const isBetweenOperator = (operator: Operator): boolean => {
+  return [Operator.BETWEEN, Operator.NOT_BETWEEN].includes(operator)
+}
+
+const isInOperator = (operator: Operator): boolean => {
+  return [Operator.IN, Operator.NOT_IN].includes(operator)
+}
+
+const getDefaultValue = (rule: QueryBuilderRule) => {
+  const filter = mapFields.value[rule.field]
+  if (isBetweenOperator(rule.operator)) {
+    switch (filter?.type) {
+      case FilterType.DATE:
+      case FilterType.DATETIME:
+        return null
+      default:
+        return []
+    }
+  } else if (isInOperator(rule.operator)) {
+    return []
+  } else {
+    if (filter?.value) {
+      return filter.value
+    } else {
+      switch (filter?.type) {
+        case FilterType.INTEGER:
+        case FilterType.NUMBER:
+          return 0
+        case FilterType.STRING:
+        case FilterType.EMAIL:
+          return ''
+        case FilterType.BOOLEAN:
+          return false
+        case FilterType.DATE:
+        case FilterType.DATETIME:
+          return null
+        default:
+          return null
       }
-    })
-  },
-  { deep: true, immediate: true },
-)
+    }
+  }
+}
 
 const isAndCondition = computed({
   get: () => group.value.condition === 'AND',
@@ -314,37 +313,36 @@ const isAndCondition = computed({
 
 const onConditionChange = (value: boolean) => {
   group.value.condition = value ? 'AND' : 'OR'
-  emit('update:modelValue', { ...group.value })
 }
 
 const onFieldChange = (rule: QueryBuilderRule) => {
-  const operators = getOperators(rule.field)
-  rule.operator = operators[0] || Operator.EQUAL
-
-  if (isBetweenOperator(rule.operator)) {
-    rule.value = [undefined, undefined]
-  } else {
-    const filter = getFilter(rule.field)
-    rule.value = filter?.value !== undefined ? filter.value : undefined
-  }
-  emit('update:modelValue', { ...group.value })
+  rule.value = getDefaultValue(rule)
+  rule.operator = getOperators.value(rule.field)[0].value
 }
 
 const onOperatorChange = (rule: QueryBuilderRule) => {
+  // Lấy operator trước đó từ Map
   const previousOperator = previousOperators.get(rule.id)
-  const isBetween = isBetweenOperator(rule.operator)
-  const wasBetween = previousOperator ? isBetweenOperator(previousOperator) : false
 
-  if (isBetween !== wasBetween) {
-    if (isBetween) {
-      rule.value = [undefined, undefined]
-    } else {
-      rule.value = undefined
-    }
+  // Kiểm tra xem có sự chuyển đổi giữa các group không
+  const isBetweenGroup = [Operator.BETWEEN, Operator.NOT_BETWEEN].includes(rule.operator)
+  const wasBetweenGroup = previousOperator
+    ? [Operator.BETWEEN, Operator.NOT_BETWEEN].includes(previousOperator)
+    : false
+  const isInGroup = previousOperator
+    ? [Operator.IN, Operator.NOT_IN].includes(rule.operator)
+    : false
+  const wasInGroup = previousOperator
+    ? [Operator.IN, Operator.NOT_IN].includes(previousOperator)
+    : false
+
+  // Chỉ reset value khi có sự chuyển đổi giữa các group khác nhau
+  if (isBetweenGroup !== wasBetweenGroup || isInGroup !== wasInGroup) {
+    rule.value = getDefaultValue(rule)
   }
 
+  // Lưu operator hiện tại làm previous cho lần sau
   previousOperators.set(rule.id, rule.operator)
-  emit('update:modelValue', { ...group.value })
 }
 
 const getOccurrences = (field: string): number => {
@@ -353,23 +351,14 @@ const getOccurrences = (field: string): number => {
   ).length
 }
 
-const getFilter = (field: string): QueryBuilderFilter | undefined => {
-  return props.filters.find((filter) => filter.field === field)
-}
-
-const getAvailableFilters = (currentField?: string): QueryBuilderFilter[] => {
-  return props.filters.filter((filter) => {
-    const occurrences = getOccurrences(filter.field)
-    const maxOccurrences = filter.maxOccurrences || 1
-    return filter.field === currentField || occurrences < maxOccurrences
-  })
-}
-
-const getAvailableFilterOptions = (currentField?: string) => {
-  return getAvailableFilters(currentField).map((filter) => ({
-    label: filter.label,
-    value: filter.field,
-  }))
+const getAvailableFilters = (currentField?: string): { field: string; label: string }[] => {
+  return props.filters
+    .filter((filter) => {
+      const occurrences = getOccurrences(filter.field)
+      const maxOccurrences = filter.maxOccurrences || 1
+      return filter.field === currentField || occurrences < maxOccurrences
+    })
+    .map((filter) => ({ field: filter.field, label: filter.label }))
 }
 
 const canAddRule = computed(() => {
@@ -380,155 +369,14 @@ const canAddRule = computed(() => {
   })
 })
 
-const getOperators = (field: string): Operator[] => {
-  const filter = getFilter(field)
-  return filter?.operators || [Operator.EQUAL]
-}
-
-const getOperatorOptions = (field: string) => {
-  return getOperators(field).map((operator) => ({
-    label: t(OperatorText[operator]),
-    value: operator,
-  }))
-}
-
-const isBetweenOperator = (operator: Operator) => {
-  return [Operator.BETWEEN, Operator.NOT_BETWEEN].includes(operator)
-}
-
-const hasNoValueOperator = (operator: Operator) => {
-  return [Operator.IS_EMPTY, Operator.IS_NOT_EMPTY].includes(operator)
-}
-
-const isDatePicker = (field: string) => {
-  const filter = getFilter(field)
-  return (
-    filter?.input === 'date' ||
-    filter?.type === FilterType.DATE ||
-    filter?.type === FilterType.DATETIME
-  )
-}
-
-const getInputComponent = (field: string) => {
-  const filter = getFilter(field)
-  if (!filter) return NInput
-
-  if (filter.input === 'select' || filter.values) return NSelect
-  if (
-    filter.input === 'date' ||
-    filter.type === FilterType.DATE ||
-    filter.type === FilterType.DATETIME
-  )
-    return NDatePicker
-  if (
-    filter.input === 'number' ||
-    filter.type === FilterType.NUMBER ||
-    filter.type === FilterType.INTEGER
-  )
-    return NInputNumber
-  if (filter.input === 'checkbox' || filter.type === FilterType.BOOLEAN) return NCheckbox
-
-  return NInput
-}
-
-const getInputProps = (field: string) => {
-  const filter = getFilter(field)
-  if (!filter) return {}
-
-  const inputProps: Record<string, any> = {}
-
-  if (filter.input === 'select' || filter.values) {
-    inputProps.options = filter.values?.map((v) => ({ label: v.text, value: v.value }))
-    inputProps.multiple = [Operator.IN, Operator.NOT_IN].includes(
-      getRuleByField(field)?.operator as Operator,
-    )
-    inputProps.maxTagCount = 'responsive'
+const getOperators = computed(() => {
+  return (field: string): { value: Operator; label: string }[] => {
+    return (mapFields.value[field]?.operators || [Operator.EQUAL]).map((operator) => ({
+      value: operator,
+      label: t(OperatorText[operator]),
+    }))
   }
-
-  if (
-    filter.input === 'date' ||
-    filter.type === FilterType.DATE ||
-    filter.type === FilterType.DATETIME
-  ) {
-    inputProps.type = filter.type === FilterType.DATETIME ? 'datetime' : 'date'
-    inputProps.format =
-      filter.validation?.format ||
-      (filter.type === FilterType.DATETIME ? 'yyyy-MM-dd HH:mm:ss' : 'yyyy-MM-dd')
-  }
-
-  if (
-    filter.input === 'number' ||
-    filter.type === FilterType.NUMBER ||
-    filter.type === FilterType.INTEGER
-  ) {
-    inputProps.min = filter.validation?.min
-    inputProps.max = filter.validation?.max
-    inputProps.precision = filter.type === FilterType.INTEGER ? 0 : undefined
-  }
-
-  return inputProps
-}
-
-const getValueAtIndex = (value: QueryBuilderValue, index: number): any => {
-  if (Array.isArray(value)) {
-    return value[index]
-  }
-  return undefined
-}
-
-const getFilteredInputProps = (rule: QueryBuilderRule) => {
-  const filter = getFilter(rule.field)
-  if (!filter) return {}
-
-  const baseProps = getInputProps(rule.field)
-  if (filter.type === FilterType.BOOLEAN || filter.input === 'checkbox') {
-    return { ...baseProps, checked: rule.value }
-  }
-  if (isDatePicker(rule.field)) {
-    return { ...baseProps, formattedValue: rule.value }
-  }
-  return { ...baseProps, value: rule.value }
-}
-
-const getDynamicInputProps = (rule: QueryBuilderRule, index: number) => {
-  const baseProps = getInputProps(rule.field)
-  const key = isDatePicker(rule.field) ? 'formattedValue' : 'value'
-  return {
-    ...baseProps,
-    [key]: getValueAtIndex(rule.value, index),
-  }
-}
-
-const getRuleByField = (field: string): QueryBuilderRule | undefined => {
-  const findRule = (g: QueryBuilderGroup): QueryBuilderRule | undefined => {
-    for (const r of g.rules) {
-      if (isGroup(r)) {
-        const found = findRule(r)
-        if (found) return found
-      } else if (r.field === field) {
-        return r
-      }
-    }
-    return undefined
-  }
-  return findRule(group.value)
-}
-
-const handleValueUpdate = (rule: QueryBuilderRule, value: unknown, index?: number) => {
-  updateRuleValue(rule, value as QueryBuilderValue, index)
-}
-
-const updateRuleValue = (rule: QueryBuilderRule, value: QueryBuilderValue, index?: number) => {
-  if (index !== undefined) {
-    if (!Array.isArray(rule.value)) {
-      rule.value = [undefined, undefined]
-    }
-    ;(rule.value as any[])[index] = value
-  } else {
-    rule.value = value
-  }
-  emit('update:modelValue', { ...group.value })
-}
+})
 
 const addRule = () => {
   const availableFilter = props.filters.find((filter) => {
@@ -538,26 +386,22 @@ const addRule = () => {
   })
 
   if (availableFilter) {
-    const operator = getOperators(availableFilter.field)[0]
-    let defaultValue: QueryBuilderValue
-
-    if (isBetweenOperator(operator)) {
-      defaultValue = [undefined, undefined]
-    } else {
-      defaultValue = availableFilter.value !== undefined ? availableFilter.value : undefined
-    }
+    const operator = getOperators.value(availableFilter.field)[0].value
 
     const rule: QueryBuilderRule = {
       id: crypto.randomUUID(),
       field: availableFilter.field,
       operator: operator,
-      value: defaultValue,
+      value: undefined,
       error: undefined,
     }
 
+    rule.value = getDefaultValue(rule)
+
+    // Khởi tạo previous operator cho rule mới
     previousOperators.set(rule.id, operator)
+
     group.value.rules.push(rule)
-    emit('update:modelValue', { ...group.value })
   }
 }
 
@@ -567,16 +411,15 @@ const addGroup = () => {
     rules: [],
   }
   group.value.rules.push(newGroup)
-  emit('update:modelValue', { ...group.value })
 }
 
 const removeRule = (index: number) => {
   const rule = group.value.rules[index]
   if (!isGroup(rule)) {
+    // Xóa previous operator khỏi Map
     previousOperators.delete(rule.id)
   }
   group.value.rules.splice(index, 1)
-  emit('update:modelValue', { ...group.value })
 }
 
 const removeGroup = () => {
@@ -587,15 +430,16 @@ const canAddGroup = computed(() => {
   if (props.maxDepth === 0) return true
   if (props.maxDepth === 1) return false
 
-  const calculateDepth = (g: QueryBuilderGroup): number => {
-    let maxSubDepth = 0
-    for (const rule of g.rules) {
+  // Tính toán độ sâu hiện tại của group
+  const calculateDepth = (group: QueryBuilderGroup): number => {
+    let maxDepth = 0
+    for (const rule of group.rules) {
       if (isGroup(rule)) {
         const depth = calculateDepth(rule)
-        maxSubDepth = Math.max(maxSubDepth, depth)
+        maxDepth = Math.max(maxDepth, depth)
       }
     }
-    return maxSubDepth + 1
+    return maxDepth + 1
   }
 
   const currentDepth = calculateDepth(group.value)

@@ -20,15 +20,17 @@ import {
   NGrid,
   NGi,
   NDivider,
+  NDatePicker,
+  NCheckbox,
 } from 'naive-ui'
-import { Refresh as RefreshIcon, Code as CodeIcon, Globe as GlobeIcon } from '@vicons/ionicons5'
+import { Refresh as RefreshIcon, Code as CodeIcon } from '@vicons/ionicons5'
 import QueryBuilder from './components/QueryBuilder.vue'
-import type { QueryBuilderGroup, QueryBuilderFilter, QueryBuilderRule } from './types/querybuilder'
+import type { QueryBuilderGroup, QueryBuilderFilter } from './types/querybuilder'
 import { FilterType, Operator } from './types/querybuilder'
 import { toSQL, toMongo, toMnpQuery } from './utils/query-converter'
 
 const { locale, t } = useI18n()
-
+const size = ref<'small' | 'medium' | 'large'>('small')
 const rules = ref<QueryBuilderGroup>({
   condition: 'AND',
   rules: [],
@@ -50,8 +52,6 @@ const filters: QueryBuilderFilter[] = [
       Operator.NOT_ENDS_WITH,
       Operator.IS_EMPTY,
       Operator.IS_NOT_EMPTY,
-      Operator.IN,
-      Operator.NOT_IN,
     ],
   },
   {
@@ -63,6 +63,10 @@ const filters: QueryBuilderFilter[] = [
       Operator.NOT_EQUAL,
       Operator.CONTAINS,
       Operator.NOT_CONTAINS,
+      Operator.BEGINS_WITH,
+      Operator.NOT_BEGINS_WITH,
+      Operator.ENDS_WITH,
+      Operator.NOT_ENDS_WITH,
       Operator.IS_EMPTY,
       Operator.IS_NOT_EMPTY,
     ],
@@ -87,8 +91,6 @@ const filters: QueryBuilderFilter[] = [
       Operator.NOT_BETWEEN,
       Operator.IS_EMPTY,
       Operator.IS_NOT_EMPTY,
-      Operator.IN,
-      Operator.NOT_IN,
     ],
   },
   {
@@ -111,6 +113,7 @@ const filters: QueryBuilderFilter[] = [
       Operator.IS_EMPTY,
       Operator.IS_NOT_EMPTY,
     ],
+    value: undefined,
   },
   {
     field: 'birthdatetime',
@@ -161,12 +164,6 @@ const filters: QueryBuilderFilter[] = [
   },
 ]
 
-// const statusOptions = [
-//   { label: 'Pending', value: 'pending' },
-//   { label: 'Completed', value: 'completed' },
-//   { label: 'Cancelled', value: 'cancelled' },
-// ]
-
 const langOptions = [
   { label: 'Tiếng Việt', value: 'vi' },
   { label: 'English', value: 'en' },
@@ -180,28 +177,6 @@ const resetRules = () => {
   rules.value = {
     condition: 'AND',
     rules: [],
-  }
-}
-
-const castRule = (rule: any): QueryBuilderRule => rule
-
-const getRuleValue = (rule: any, index?: number): any => {
-  const r = castRule(rule)
-  if (index !== undefined) {
-    return Array.isArray(r.value) ? r.value[index] : undefined
-  }
-  return r.value
-}
-
-const updateRuleValue = (rule: any, val: any, index?: number) => {
-  const r = castRule(rule)
-  if (index !== undefined) {
-    if (!Array.isArray(r.value)) {
-      r.value = [undefined, undefined]
-    }
-    r.value[index] = val
-  } else {
-    r.value = val
   }
 }
 </script>
@@ -229,11 +204,7 @@ const updateRuleValue = (rule: any, val: any, index?: number) => {
                 :options="langOptions"
                 style="width: 140px"
                 size="medium"
-              >
-                <template #prefix>
-                  <n-icon><GlobeIcon /></n-icon>
-                </template>
-              </n-select>
+              />
               <n-button type="error" ghost @click="resetRules" size="medium">
                 <template #icon>
                   <n-icon><RefreshIcon /></n-icon>
@@ -249,57 +220,95 @@ const updateRuleValue = (rule: any, val: any, index?: number) => {
             <!-- Row 1: Query Builder -->
             <n-gi :span="24">
               <n-card :title="t('queryBuilder.condition')" class="builder-card">
-                <QueryBuilder v-model="rules" :filters="filters" :max-depth="3">
+                <template #header-extra>
+                  <n-select
+                    v-model:value="size"
+                    :options="[
+                      { label: 'Small', value: 'small' },
+                      { label: 'Medium', value: 'medium' },
+                      { label: 'Large', value: 'large' },
+                    ]"
+                    label-field="label"
+                    value-field="value"
+                    style="width: 140px"
+                    size="medium"
+                  />
+                </template>
+                <QueryBuilder v-model="rules" :filters="filters" :max-depth="3" :size="size">
                   <!-- Example of custom slot for status -->
-                  <template #status="{ rule, widthValueInput, filter, operator }">
+                  <template #active="{ rule, filter }">
+                    <n-checkbox v-model:checked="rule.value">{{ filter.label }}</n-checkbox>
+                  </template>
+
+                  <template #status="{ rule, widthValueInput, filter, size }">
                     <n-select
-                      v-if="![Operator.IS_EMPTY, Operator.IS_NOT_EMPTY].includes(operator)"
-                      :value="getRuleValue(rule)"
-                      :options="filter?.values?.map((v) => ({ label: v.text, value: v.value }))"
-                      :multiple="[Operator.IN, Operator.NOT_IN].includes(castRule(rule).operator)"
+                      v-model:value="rule.value"
+                      :options="filter.values || []"
+                      label-field="text"
+                      value-field="value"
+                      :multiple="[Operator.IN, Operator.NOT_IN].includes(rule.operator)"
                       max-tag-count="responsive"
                       clearable
                       :style="{ width: `${widthValueInput}px` }"
-                      @update:value="updateRuleValue(rule, $event)"
+                      :size="size"
                     />
                   </template>
 
                   <!-- Example of custom slot for age with different UI -->
-                  <template #age="{ isBetween, rule, widthValueInput, operator }">
-                    <template v-if="![Operator.IS_EMPTY, Operator.IS_NOT_EMPTY].includes(operator)">
-                      <div v-if="!isBetween">
-                        <n-input-number
-                          :value="getRuleValue(rule)"
-                          :min="0"
-                          :max="120"
-                          placeholder="Age"
-                          clearable
-                          :style="{ width: `${widthValueInput}px` }"
-                          @update:value="updateRuleValue(rule, $event)"
-                        />
-                      </div>
-                      <div v-else style="display: flex; align-items: center; gap: 8px">
-                        <n-input-number
-                          :value="getRuleValue(rule, 0)"
-                          :min="0"
-                          :max="120"
-                          placeholder="Min"
-                          clearable
-                          :style="{ width: `${widthValueInput / 2 - 8}px` }"
-                          @update:value="updateRuleValue(rule, $event, 0)"
-                        />
-                        <span style="color: #71717a">to</span>
-                        <n-input-number
-                          :value="getRuleValue(rule, 1)"
-                          :min="0"
-                          :max="120"
-                          placeholder="Max"
-                          clearable
-                          :style="{ width: `${widthValueInput / 2 - 8}px` }"
-                          @update:value="updateRuleValue(rule, $event, 1)"
-                        />
-                      </div>
-                    </template>
+                  <template #age="{ isBetween, rule, widthValueInput, size }">
+                    <div v-if="!isBetween">
+                      <n-input-number
+                        v-model:value="rule.value"
+                        :min="0"
+                        :max="120"
+                        placeholder="Age"
+                        :style="{ width: `${widthValueInput}px` }"
+                        :size="size"
+                      />
+                    </div>
+                    <div v-else style="display: flex; align-items: center; gap: 8px">
+                      <n-input-number
+                        v-model:value="rule.value[0]"
+                        :min="0"
+                        :max="120"
+                        placeholder="Min"
+                        clearable
+                        :style="{ width: `${widthValueInput / 2 - 8}px` }"
+                        :size="size"
+                      />
+                      <span style="color: #71717a">to</span>
+                      <n-input-number
+                        v-model:value="rule.value[1]"
+                        :min="0"
+                        :max="120"
+                        placeholder="Max"
+                        clearable
+                        :style="{ width: `${widthValueInput / 2 - 8}px` }"
+                        :size="size"
+                      />
+                    </div>
+                  </template>
+
+                  <template #birthdate="{ isBetween, rule, widthValueInput, size }">
+                    <n-date-picker
+                      v-model:value="rule.value"
+                      :type="isBetween ? 'daterange' : 'date'"
+                      placeholder="Birthdate"
+                      value-format="yyyy-MM-dd"
+                      :style="{ width: `${widthValueInput}px` }"
+                      :size="size"
+                    />
+                  </template>
+
+                  <template #birthdatetime="{ isBetween, rule, widthValueInput, size }">
+                    <n-date-picker
+                      v-model:value="rule.value"
+                      :type="isBetween ? 'datetimerange' : 'datetime'"
+                      placeholder="Birthdatetime"
+                      value-format="yyyy-MM-dd HH:mm:ss"
+                      :style="{ width: `${widthValueInput + (isBetween ? 100 : 0)}px` }"
+                      :size="size"
+                    />
                   </template>
                 </QueryBuilder>
               </n-card>
@@ -371,18 +380,12 @@ const updateRuleValue = (rule: any, val: any, index?: number) => {
                         <div style="color: #64748b; font-size: 0.9rem">
                           Email:
                           <a
-                            href="mailto:tanmv@mpos.vn"
-                            style="color: #18a058; text-decoration: none"
-                            >tanmv@mpos.vn</a
-                          >
-                          |
-                          <a
                             href="mailto:macvantan@gmail.com"
                             style="color: #18a058; text-decoration: none"
                             >macvantan@gmail.com</a
                           >
                         </div>
-                        <div style="color: #64748b; font-size: 0.9rem">
+                        <!-- <div style="color: #64748b; font-size: 0.9rem">
                           Skype:
                           <code
                             style="
@@ -393,7 +396,7 @@ const updateRuleValue = (rule: any, val: any, index?: number) => {
                             "
                             >trai_12a1</code
                           >
-                        </div>
+                        </div> -->
                       </n-space>
                     </n-space>
                   </n-space>
