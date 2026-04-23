@@ -28,6 +28,7 @@ import QueryBuilder from './components/QueryBuilder.vue'
 import type { QueryBuilderGroup, QueryBuilderFilter } from './types/querybuilder'
 import { FilterType, Operator } from './types/querybuilder'
 import { toSQL, toMongo, toMnpQuery } from './utils/query-converter'
+import packageJson from '../package.json'
 
 const { locale, t } = useI18n()
 const size = ref<'small' | 'medium' | 'large'>('small')
@@ -36,148 +37,150 @@ const rules = ref<QueryBuilderGroup>({
   rules: [],
 })
 
-const filters: QueryBuilderFilter[] = [
-  {
-    field: 'name',
-    label: 'Name',
-    type: FilterType.STRING,
-    operators: [
-      Operator.EQUAL,
-      Operator.NOT_EQUAL,
-      Operator.CONTAINS,
-      Operator.NOT_CONTAINS,
-      Operator.BEGINS_WITH,
-      Operator.NOT_BEGINS_WITH,
-      Operator.ENDS_WITH,
-      Operator.NOT_ENDS_WITH,
-      Operator.IS_EMPTY,
-      Operator.IS_NOT_EMPTY,
-    ],
-  },
-  {
-    field: 'email',
-    label: 'Email',
-    type: FilterType.EMAIL,
-    operators: [
-      Operator.EQUAL,
-      Operator.NOT_EQUAL,
-      Operator.CONTAINS,
-      Operator.NOT_CONTAINS,
-      Operator.BEGINS_WITH,
-      Operator.NOT_BEGINS_WITH,
-      Operator.ENDS_WITH,
-      Operator.NOT_ENDS_WITH,
-      Operator.IS_EMPTY,
-      Operator.IS_NOT_EMPTY,
-    ],
-    input: 'email',
-  },
-  {
-    field: 'age',
-    label: 'Age',
-    type: FilterType.INTEGER,
-    validation: {
-      min: 0,
-      max: 120,
-    },
-    operators: [
-      Operator.EQUAL,
-      Operator.NOT_EQUAL,
-      Operator.GREATER,
-      Operator.GREATER_OR_EQUAL,
-      Operator.LESS,
-      Operator.LESS_OR_EQUAL,
-      Operator.BETWEEN,
-      Operator.NOT_BETWEEN,
-      Operator.IS_EMPTY,
-      Operator.IS_NOT_EMPTY,
-    ],
-  },
-  {
-    field: 'birthdate',
-    label: 'Birth Date',
-    type: FilterType.DATE,
-    input: 'date',
-    validation: {
-      format: 'yyyy-MM-dd',
-    },
-    operators: [
-      Operator.EQUAL,
-      Operator.NOT_EQUAL,
-      Operator.GREATER,
-      Operator.GREATER_OR_EQUAL,
-      Operator.LESS,
-      Operator.LESS_OR_EQUAL,
-      Operator.BETWEEN,
-      Operator.NOT_BETWEEN,
-      Operator.IS_EMPTY,
-      Operator.IS_NOT_EMPTY,
-    ],
-    value: undefined,
-  },
-  {
-    field: 'birthdatetime',
-    label: 'Birth DateTime',
-    type: FilterType.DATETIME,
-    input: 'date',
-    validation: {
-      format: 'yyyy-MM-dd HH:mm:ss',
-    },
-    operators: [
-      Operator.EQUAL,
-      Operator.NOT_EQUAL,
-      Operator.GREATER,
-      Operator.GREATER_OR_EQUAL,
-      Operator.LESS,
-      Operator.LESS_OR_EQUAL,
-      Operator.BETWEEN,
-      Operator.NOT_BETWEEN,
-      Operator.IS_EMPTY,
-      Operator.IS_NOT_EMPTY,
-    ],
-  },
-  {
-    field: 'active',
-    label: 'Active',
-    type: FilterType.BOOLEAN,
-    input: 'checkbox',
-  },
-  {
-    field: 'status',
-    label: 'Status',
-    type: FilterType.STRING,
-    input: 'select',
-    value: 'pending',
-    operators: [
-      Operator.EQUAL,
-      Operator.NOT_EQUAL,
-      Operator.IN,
-      Operator.NOT_IN,
-      Operator.IS_EMPTY,
-      Operator.IS_NOT_EMPTY,
-    ],
-    values: [
-      { text: 'Pending', value: 'pending' },
-      { text: 'Completed', value: 'completed' },
-      { text: 'Cancelled', value: 'cancelled' },
-    ],
-  },
-]
-
-const langOptions = [
-  { label: 'Tiếng Việt', value: 'vi' },
-  { label: 'English', value: 'en' },
-]
+const filters = computed(
+  () =>
+    [
+      {
+        field: 'name',
+        label: t('app.fields.name'),
+        type: FilterType.STRING,
+        operators: [
+          Operator.EQUAL,
+          Operator.NOT_EQUAL,
+          Operator.CONTAINS,
+          Operator.NOT_CONTAINS,
+          Operator.BEGINS_WITH,
+          Operator.NOT_BEGINS_WITH,
+          Operator.ENDS_WITH,
+          Operator.NOT_ENDS_WITH,
+          Operator.IS_EMPTY,
+          Operator.IS_NOT_EMPTY,
+        ],
+      },
+      {
+        field: 'email',
+        label: t('app.fields.email'),
+        type: FilterType.EMAIL,
+        operators: [
+          Operator.EQUAL,
+          Operator.NOT_EQUAL,
+          Operator.CONTAINS,
+          Operator.NOT_CONTAINS,
+          Operator.BEGINS_WITH,
+          Operator.NOT_BEGINS_WITH,
+          Operator.ENDS_WITH,
+          Operator.NOT_ENDS_WITH,
+          Operator.IS_EMPTY,
+          Operator.IS_NOT_EMPTY,
+        ],
+        input: 'email',
+      },
+      {
+        field: 'age',
+        label: t('app.fields.age'),
+        type: FilterType.INTEGER,
+        validation: {
+          min: 0,
+          max: 120,
+        },
+        operators: [
+          Operator.EQUAL,
+          Operator.NOT_EQUAL,
+          Operator.GREATER,
+          Operator.GREATER_OR_EQUAL,
+          Operator.LESS,
+          Operator.LESS_OR_EQUAL,
+          Operator.BETWEEN,
+          Operator.NOT_BETWEEN,
+          Operator.IS_EMPTY,
+          Operator.IS_NOT_EMPTY,
+        ],
+      },
+      {
+        field: 'birthdate',
+        label: t('app.fields.birthdate'),
+        type: FilterType.DATE,
+        input: 'date',
+        validation: {
+          format: 'yyyy-MM-dd',
+        },
+        operators: [
+          Operator.EQUAL,
+          Operator.NOT_EQUAL,
+          Operator.GREATER,
+          Operator.GREATER_OR_EQUAL,
+          Operator.LESS,
+          Operator.LESS_OR_EQUAL,
+          Operator.BETWEEN,
+          Operator.NOT_BETWEEN,
+          Operator.IS_EMPTY,
+          Operator.IS_NOT_EMPTY,
+        ],
+        value: undefined,
+      },
+      {
+        field: 'birthdatetime',
+        label: t('app.fields.birthdatetime'),
+        type: FilterType.DATETIME,
+        input: 'date',
+        validation: {
+          format: 'yyyy-MM-dd HH:mm:ss',
+        },
+        operators: [
+          Operator.EQUAL,
+          Operator.NOT_EQUAL,
+          Operator.GREATER,
+          Operator.GREATER_OR_EQUAL,
+          Operator.LESS,
+          Operator.LESS_OR_EQUAL,
+          Operator.BETWEEN,
+          Operator.NOT_BETWEEN,
+          Operator.IS_EMPTY,
+          Operator.IS_NOT_EMPTY,
+        ],
+      },
+      {
+        field: 'active',
+        label: t('app.fields.active'),
+        type: FilterType.BOOLEAN,
+        input: 'checkbox',
+      },
+      {
+        field: 'status',
+        label: t('app.fields.status'),
+        type: FilterType.STRING,
+        input: 'select',
+        value: 'pending',
+        operators: [
+          Operator.EQUAL,
+          Operator.NOT_EQUAL,
+          Operator.IN,
+          Operator.NOT_IN,
+          Operator.IS_EMPTY,
+          Operator.IS_NOT_EMPTY,
+        ],
+        values: [
+          { text: t('app.statusValues.pending'), value: 'pending' },
+          { text: t('app.statusValues.completed'), value: 'completed' },
+          { text: t('app.statusValues.cancelled'), value: 'cancelled' },
+        ],
+      },
+    ] as QueryBuilderFilter[],
+)
 
 const sqlOutput = computed(() => toSQL(rules.value))
 const mongoOutput = computed(() => JSON.stringify(toMongo(rules.value), null, 2))
-const mnpOutput = computed(() => toMnpQuery(rules.value, filters))
+const mnpOutput = computed(() => toMnpQuery(rules.value, filters.value))
 
 const resetRules = () => {
   rules.value = {
     condition: 'AND',
     rules: [],
   }
+}
+
+const toggleLocale = () => {
+  locale.value = locale.value === 'vi' ? 'en' : 'vi'
 }
 </script>
 
@@ -192,24 +195,18 @@ const resetRules = () => {
                 <n-icon size="24" color="#fff"><CodeIcon /></n-icon>
               </div>
               <n-gradient-text type="primary" :size="24" weight="800">
-                Vue 3 QueryBuilder
+                {{ t('app.title') }}
               </n-gradient-text>
               <n-tag type="primary" size="small" round quaternary style="margin-left: 8px"
                 >Naive UI</n-tag
               >
+              <n-tag type="info" size="small" round quaternary style="margin-left: 8px"
+                >v{{ packageJson.version }}</n-tag
+              >
             </n-space>
             <n-space align="center" :size="20">
-              <n-select
-                v-model:value="locale"
-                :options="langOptions"
-                style="width: 140px"
-                size="medium"
-              />
-              <n-button type="error" ghost @click="resetRules" size="medium">
-                <template #icon>
-                  <n-icon><RefreshIcon /></n-icon>
-                </template>
-                {{ t('queryBuilder.reset') }}
+              <n-button tertiary circle size="medium" @click="toggleLocale">
+                {{ locale }}
               </n-button>
             </n-space>
           </n-space>
@@ -221,18 +218,26 @@ const resetRules = () => {
             <n-gi :span="24">
               <n-card :title="t('queryBuilder.condition')" class="builder-card">
                 <template #header-extra>
-                  <n-select
-                    v-model:value="size"
-                    :options="[
-                      { label: 'Small', value: 'small' },
-                      { label: 'Medium', value: 'medium' },
-                      { label: 'Large', value: 'large' },
-                    ]"
-                    label-field="label"
-                    value-field="value"
-                    style="width: 140px"
-                    size="medium"
-                  />
+                  <n-space>
+                    <n-select
+                      v-model:value="size"
+                      :options="[
+                        { label: t('app.size.small'), value: 'small' },
+                        { label: t('app.size.medium'), value: 'medium' },
+                        { label: t('app.size.large'), value: 'large' },
+                      ]"
+                      label-field="label"
+                      value-field="value"
+                      style="width: 140px"
+                      size="medium"
+                    />
+                    <n-button type="error" ghost @click="resetRules" size="medium">
+                      <template #icon>
+                        <n-icon><RefreshIcon /></n-icon>
+                      </template>
+                      {{ t('app.reset') }}
+                    </n-button>
+                  </n-space>
                 </template>
                 <QueryBuilder v-model="rules" :filters="filters" :max-depth="3" :size="size">
                   <!-- Example of custom slot for status -->
@@ -261,7 +266,7 @@ const resetRules = () => {
                         v-model:value="rule.value"
                         :min="0"
                         :max="120"
-                        placeholder="Age"
+                        :placeholder="t('app.placeholders.age')"
                         :style="{ width: `${widthValueInput}px` }"
                         :size="size"
                       />
@@ -271,17 +276,17 @@ const resetRules = () => {
                         v-model:value="rule.value[0]"
                         :min="0"
                         :max="120"
-                        placeholder="Min"
+                        :placeholder="t('app.placeholders.min')"
                         clearable
                         :style="{ width: `${widthValueInput / 2 - 8}px` }"
                         :size="size"
                       />
-                      <span style="color: #71717a">to</span>
+                      <span style="color: #71717a">{{ t('app.to') }}</span>
                       <n-input-number
                         v-model:value="rule.value[1]"
                         :min="0"
                         :max="120"
-                        placeholder="Max"
+                        :placeholder="t('app.placeholders.max')"
                         clearable
                         :style="{ width: `${widthValueInput / 2 - 8}px` }"
                         :size="size"
@@ -293,7 +298,7 @@ const resetRules = () => {
                     <n-date-picker
                       v-model:value="rule.value"
                       :type="isBetween ? 'daterange' : 'date'"
-                      placeholder="Birthdate"
+                      :placeholder="t('app.placeholders.birthdate')"
                       value-format="yyyy-MM-dd"
                       :style="{ width: `${widthValueInput}px` }"
                       :size="size"
@@ -304,7 +309,7 @@ const resetRules = () => {
                     <n-date-picker
                       v-model:value="rule.value"
                       :type="isBetween ? 'datetimerange' : 'datetime'"
-                      placeholder="Birthdatetime"
+                      :placeholder="t('app.placeholders.birthdatetime')"
                       value-format="yyyy-MM-dd HH:mm:ss"
                       :style="{ width: `${widthValueInput + (isBetween ? 100 : 0)}px` }"
                       :size="size"
@@ -317,22 +322,22 @@ const resetRules = () => {
             <!-- Row 2: Output Queries -->
             <n-gi :span="24">
               <n-card
-                title="Output Queries"
+                :title="t('app.outputQueries')"
                 class="output-card"
                 :segmented="{ content: true, footer: true }"
               >
                 <template #header-extra>
-                  <n-tag type="success" size="small" round>Real-time</n-tag>
+                  <n-tag type="success" size="small" round>{{ t('app.realTime') }}</n-tag>
                 </template>
                 <n-tabs type="line" animated>
                   <n-tab-pane name="sql" tab="SQL">
-                    <pre class="code-block">{{ sqlOutput || '-- No rules added yet --' }}</pre>
+                    <pre class="code-block">{{ sqlOutput || `-- ${t('app.noRules')} --` }}</pre>
                   </n-tab-pane>
                   <n-tab-pane name="mongo" tab="MongoDB">
                     <pre class="code-block">{{ mongoOutput }}</pre>
                   </n-tab-pane>
                   <n-tab-pane name="mnp" tab="MNP">
-                    <pre class="code-block">{{ mnpOutput || '-- No rules added yet --' }}</pre>
+                    <pre class="code-block">{{ mnpOutput || `-- ${t('app.noRules')} --` }}</pre>
                   </n-tab-pane>
                   <n-tab-pane name="json" tab="JSON">
                     <pre class="code-block">{{ JSON.stringify(rules, null, 2) }}</pre>
@@ -341,7 +346,7 @@ const resetRules = () => {
                 <template #footer>
                   <n-space vertical :size="16">
                     <div class="footer-hint">
-                      Generated queries are automatically updated as you build.
+                      {{ t('app.footerHint') }}
                     </div>
                     <n-divider style="margin: 8px 0" />
                     <n-space justify="space-between" align="center" :wrap="false">
@@ -378,7 +383,7 @@ const resetRules = () => {
                       </n-space>
                       <n-space vertical align="end" :size="4">
                         <div style="color: #64748b; font-size: 0.9rem">
-                          Email:
+                          {{ t('app.emailLabel') }}:
                           <a
                             href="mailto:macvantan@gmail.com"
                             style="color: #18a058; text-decoration: none"

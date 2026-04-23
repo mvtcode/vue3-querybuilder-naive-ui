@@ -9,6 +9,11 @@ A powerful, highly flexible, and type-safe query builder component for Vue 3, el
 
 ---
 
+> [!NOTE]
+> This project is a specialized port of [@mvtcode/vue3-querybuilder](https://github.com/mvtcode/vue3-querybuilder). While the original version is built for Element Plus, this version is rebuilt from the ground up to utilize **Naive UI**, providing a more refined, premium aesthetic and deeper integration with Naive UI's component ecosystem.
+
+---
+
 ## ✨ Features
 
 - 🚀 **Modern Vue 3**: Native Composition API and TypeScript support.
@@ -231,6 +236,18 @@ pnpm build
 # Run tests
 pnpm test:unit
 ```
+
+---
+
+## 📸 Screenshots
+
+### Vietnamese
+
+![Screenshot VI](./screenshot_vi.png)
+
+### English
+
+![Screenshot EN](./screenshot_en.png)
 
 ---
 

@@ -60,8 +60,8 @@ export type QueryBuilderValue =
   | number
   | boolean
   | Date
-  | undefined
-  | (string | number | boolean | Date | undefined)[]
+  | null
+  | (string | number | boolean | Date | undefined | null)[]
 
 export interface QueryBuilderRule {
   id: string
