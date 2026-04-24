@@ -202,11 +202,12 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const t = (key: string) => {
-  return i18n.global.t(key, props.language)
+  return i18n.global.t(key, {}, { locale: props.language })
 }
 
 const emit = defineEmits<{
   (e: 'remove'): void
+  (e: 'change'): void
 }>()
 
 const mapFields = computed(() => {
@@ -246,6 +247,20 @@ watch(
     }
   },
   { immediate: true },
+)
+
+// Emit 'change' khi bất kỳ thay đổi nào xảy ra trong group (thêm/xoá rule, đổi field/operator/value, thêm/xoá group)
+// deep: true → theo dõi toàn bộ cây object, bao gồm cả nested sub-groups
+// flush: 'post' → sau khi DOM update để đảm bảo model đã được commit
+// Không cần bubble up từ nested QueryBuilder qua template vì:
+// @update:model-value của nested group sẽ update group.rules[index] (thuộc group.value của parent)
+// → deep watch sẽ tự bắt được, tránh double emission
+watch(
+  () => group.value,
+  () => {
+    if (props.isRoot) emit('change')
+  },
+  { deep: true, flush: 'post' },
 )
 
 const asGroup = (rule: QueryBuilderRule | QueryBuilderGroup): QueryBuilderGroup => {

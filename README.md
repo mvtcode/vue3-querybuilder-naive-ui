@@ -32,35 +32,16 @@ A powerful, highly flexible, and type-safe query builder component for Vue 3, el
 ## 📦 Installation
 
 ```bash
-pnpm add @mvtcode/vue3-querybuilder-naive-ui naive-ui vue-i18n dayjs
+pnpm add @mvtcode/vue3-querybuilder-naive-ui naive-ui
 # or
-npm install @mvtcode/vue3-querybuilder-naive-ui naive-ui vue-i18n dayjs
+npm install @mvtcode/vue3-querybuilder-naive-ui naive-ui
 ```
 
 ---
 
 ## 🚀 Quick Start
 
-### 1. Configure i18n
-
-The component requires `vue-i18n` to handle labels and operators.
-
-```typescript
-// i18n.ts
-import { createI18n } from 'vue-i18n'
-import { en, vi } from '@mvtcode/vue3-querybuilder-naive-ui'
-
-const i18n = createI18n({
-  legacy: false,
-  locale: 'en',
-  fallbackLocale: 'en',
-  messages: { en, vi },
-})
-
-export default i18n
-```
-
-### 2. Basic Usage
+### Basic Usage
 
 ```vue
 <script setup lang="ts">
@@ -90,7 +71,7 @@ const filters: QueryBuilderFilter[] = [
 </script>
 
 <template>
-  <QueryBuilder v-model="rules" :filters="filters" />
+  <QueryBuilder v-model="rules" :filters="filters" language="en" @change="onQueryChange" />
 </template>
 ```
 
@@ -100,20 +81,22 @@ const filters: QueryBuilderFilter[] = [
 
 ### Props
 
-| Prop                  | Type                   | Default      | Description                              |
-| :-------------------- | :--------------------- | :----------- | :--------------------------------------- |
-| `modelValue`          | `QueryBuilderGroup`    | _(Required)_ | V-model for the query state.             |
-| `filters`             | `QueryBuilderFilter[]` | _(Required)_ | Configuration for available fields.      |
-| `maxDepth`            | `number`               | `0`          | Max nesting level (0 = unlimited).       |
-| `isRoot`              | `boolean`              | `true`       | Whether this is the top-level container. |
-| `widthFieldSelect`    | `number`               | `200`        | Width of field selection (px).           |
-| `widthOperatorSelect` | `number`               | `180`        | Width of operator selection (px).        |
-| `widthValueInput`     | `number`               | `250`        | Width of the value input area (px).      |
+| Prop                  | Type                             | Default      | Description                                   |
+| :-------------------- | :------------------------------- | :----------- | :-------------------------------------------- |
+| `modelValue`          | `QueryBuilderGroup`              | _(Required)_ | V-model for the query state.                  |
+| `filters`             | `QueryBuilderFilter[]`           | _(Required)_ | Configuration for available fields.           |
+| `language`            | `'vi' \| 'en'`                   | `'vi'`       | Built-in UI language (Vietnamese or English). |
+| `maxDepth`            | `number`                         | `0`          | Max nesting level (0 = unlimited).            |
+| `widthFieldSelect`    | `number`                         | `200`        | Width of field selection (px).                |
+| `widthOperatorSelect` | `number`                         | `180`        | Width of operator selection (px).             |
+| `widthValueInput`     | `number`                         | `250`        | Width of the value input area (px).           |
+| `size`                | `'small' \| 'medium' \| 'large'` | `'medium'`   | Size of all Naive UI controls.                |
 
-### Custom Labels
+### Events
 
-You can override default i18n labels using these props:
-`labelAddRule`, `labelAddGroup`, `labelRemoveGroup`, `labelFrom`, `labelTo`, `labelAnd`, `labelOr`, `labelSelectField`, `labelSelectOperator`, `labelEnterValue`, `labelRemoveRule`, `labelCondition`.
+| Event    | Payload | Description                                                                                  |
+| :------- | :------ | :------------------------------------------------------------------------------------------- |
+| `change` | —       | Fired when any part of the query changes (add/remove rule or group, field, operator, value). |
 
 ---
 
@@ -164,13 +147,16 @@ enum Operator {
 
 Customize inputs for specific fields using slots named after the field `field`.
 
-| Prop              | Type                 | Description                              |
-| :---------------- | :------------------- | :--------------------------------------- |
-| `rule`            | `QueryBuilderRule`   | The current rule object.                 |
-| `filter`          | `QueryBuilderFilter` | The filter configuration for this field. |
-| `operator`        | `Operator`           | The currently selected operator.         |
-| `isBetween`       | `boolean`            | True if operator is BETWEEN/NOT_BETWEEN. |
-| `widthValueInput` | `number`             | Calculated width for the input.          |
+| Prop              | Type                             | Description                              |
+| :---------------- | :------------------------------- | :--------------------------------------- |
+| `rule`            | `QueryBuilderRule`               | The current rule object.                 |
+| `filter`          | `QueryBuilderFilter`             | The filter configuration for this field. |
+| `operator`        | `Operator`                       | The currently selected operator.         |
+| `value`           | `QueryBuilderValue`              | The current value of the rule.           |
+| `isBetween`       | `boolean`                        | True if operator is BETWEEN/NOT_BETWEEN. |
+| `widthValueInput` | `number`                         | Calculated width for the input.          |
+| `size`            | `'small' \| 'medium' \| 'large'` | Size passed from the component prop.     |
+| `index`           | `number`                         | Index of the rule in the current group.  |
 
 **Example:**
 
@@ -238,6 +224,10 @@ pnpm test:unit
 ```
 
 ---
+
+## Example code
+
+Full example code can be found in the [App.vue](https://github.com/mvtcode/vue3-querybuilder-naive-ui/blob/main/src/App.vue) file.
 
 ## 📸 Screenshots
 
