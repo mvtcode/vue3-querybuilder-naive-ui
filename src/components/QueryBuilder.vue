@@ -12,8 +12,8 @@
               data-test="condition-switch"
               :size="size"
             >
-              <template #checked>{{ labelAnd || t('queryBuilder.and') }}</template>
-              <template #unchecked>{{ labelOr || t('queryBuilder.or') }}</template>
+              <template #checked>{{ t('queryBuilder.and') }}</template>
+              <template #unchecked>{{ t('queryBuilder.or') }}</template>
             </n-switch>
             <n-button
               ghost
@@ -26,7 +26,7 @@
               <template #icon>
                 <n-icon><AddIcon /></n-icon>
               </template>
-              {{ labelAddRule || t('queryBuilder.addRule') }}
+              {{ t('queryBuilder.addRule') }}
             </n-button>
             <n-button
               ghost
@@ -39,7 +39,7 @@
               <template #icon>
                 <n-icon><FolderAddIcon /></n-icon>
               </template>
-              {{ labelAddGroup || t('queryBuilder.addGroup') }}
+              {{ t('queryBuilder.addGroup') }}
             </n-button>
             <n-button
               quaternary
@@ -52,12 +52,9 @@
               <template #icon>
                 <n-icon><TrashIcon /></n-icon>
               </template>
-              {{ labelRemoveGroup || t('queryBuilder.removeGroup') }}
+              {{ t('queryBuilder.removeGroup') }}
             </n-button>
           </n-flex>
-          <!-- <div v-show="isRoot">
-            <n-text depth="3" style="font-size: 0.875rem">(version: {{ version }})</n-text>
-          </div> -->
         </n-flex>
         <!-- end group header -->
 
@@ -72,18 +69,8 @@
                 :filters="filters"
                 :is-root="false"
                 :max-depth="maxDepth > 0 ? maxDepth - 1 : 0"
-                :label-add-rule="labelAddRule"
-                :label-add-group="labelAddGroup"
-                :label-remove-group="labelRemoveGroup"
-                :label-from="labelFrom"
-                :label-to="labelTo"
-                :label-and="labelAnd"
-                :label-or="labelOr"
-                :label-select-field="labelSelectField"
-                :label-select-operator="labelSelectOperator"
-                :label-enter-value="labelEnterValue"
-                :label-remove-rule="labelRemoveRule"
-                :label-condition="labelCondition"
+                :current-depth="currentDepth + 1"
+                :language="language"
                 :width-field-select="widthFieldSelect"
                 :width-operator-select="widthOperatorSelect"
                 :width-value-input="widthValueInput"
@@ -108,7 +95,7 @@
                   :key="rule.field"
                   label-field="label"
                   value-field="field"
-                  :placeholder="labelSelectField || t('queryBuilder.selectField')"
+                  :placeholder="t('queryBuilder.selectField')"
                   @update:value="onFieldChange(rule)"
                   data-test="field-select"
                   :size="size"
@@ -122,7 +109,7 @@
                   :style="{ width: `${widthOperatorSelect}px` }"
                   label-field="label"
                   value-field="value"
-                  :placeholder="labelSelectOperator || t('queryBuilder.selectOperator')"
+                  :placeholder="t('queryBuilder.selectOperator')"
                   @update:value="onOperatorChange(rule)"
                   data-test="operator-select"
                   :size="size"
@@ -146,7 +133,7 @@
                     :value="asString(rule.value)"
                     @update:value="(val) => (rule.value = val)"
                     :style="{ width: `${widthValueInput}px` }"
-                    :placeholder="labelEnterValue || t('queryBuilder.enterValue')"
+                    :placeholder="t('queryBuilder.enterValue')"
                     clearable
                     :size="size"
                   />
@@ -179,8 +166,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import { useI18n } from 'vue-i18n'
+import { computed, watch } from 'vue'
 import { NCard, NSwitch, NButton, NSelect, NInput, NIcon, NFlex } from 'naive-ui'
 import { Add as AddIcon, FolderOpen as FolderAddIcon, Trash as TrashIcon } from '@vicons/ionicons5'
 import type {
@@ -190,23 +176,14 @@ import type {
   QueryBuilderValue,
 } from '../types/querybuilder'
 import { FilterType, Operator, OperatorText } from '../types/querybuilder'
+import i18n from '../i18n'
 
 interface Props {
   filters: QueryBuilderFilter[]
   isRoot?: boolean
   maxDepth?: number
-  labelAddRule?: string
-  labelAddGroup?: string
-  labelRemoveGroup?: string
-  labelFrom?: string
-  labelTo?: string
-  labelAnd?: string
-  labelOr?: string
-  labelSelectField?: string
-  labelSelectOperator?: string
-  labelEnterValue?: string
-  labelRemoveRule?: string
-  labelCondition?: string
+  currentDepth?: number
+  language?: 'vi' | 'en'
   widthFieldSelect?: number
   widthOperatorSelect?: number
   widthValueInput?: number
@@ -219,10 +196,14 @@ const props = withDefaults(defineProps<Props>(), {
   widthOperatorSelect: 180,
   widthValueInput: 250,
   maxDepth: 0,
+  currentDepth: 1,
   size: 'medium',
+  language: 'vi',
 })
 
-const { t } = useI18n()
+const t = (key: string) => {
+  return i18n.global.t(key, props.language)
+}
 
 const emit = defineEmits<{
   (e: 'remove'): void
@@ -251,6 +232,21 @@ const group = defineModel<QueryBuilderGroup>({
 const isGroup = (rule: QueryBuilderRule | QueryBuilderGroup): rule is QueryBuilderGroup => {
   return 'condition' in rule
 }
+
+// Seed previousOperators từ model value (xử lý cả sync lẫn async - ví dụ sau khi gọi API)
+// immediate: true → chạy ngay lập tức khi component setup, không cần chờ mount
+// !has(rule.id) → không ghi đè operator đã được user thay đổi
+watch(
+  () => group.value.rules,
+  (rules) => {
+    for (const rule of rules) {
+      if (!isGroup(rule) && rule.id && rule.operator && !previousOperators.has(rule.id)) {
+        previousOperators.set(rule.id, rule.operator)
+      }
+    }
+  },
+  { immediate: true },
+)
 
 const asGroup = (rule: QueryBuilderRule | QueryBuilderGroup): QueryBuilderGroup => {
   return rule as QueryBuilderGroup
@@ -392,7 +388,7 @@ const addRule = () => {
       id: crypto.randomUUID(),
       field: availableFilter.field,
       operator: operator,
-      value: undefined,
+      value: null,
       error: undefined,
     }
 
@@ -428,50 +424,8 @@ const removeGroup = () => {
 
 const canAddGroup = computed(() => {
   if (props.maxDepth === 0) return true
-  if (props.maxDepth === 1) return false
-
-  // Tính toán độ sâu hiện tại của group
-  const calculateDepth = (group: QueryBuilderGroup): number => {
-    let maxDepth = 0
-    for (const rule of group.rules) {
-      if (isGroup(rule)) {
-        const depth = calculateDepth(rule)
-        maxDepth = Math.max(maxDepth, depth)
-      }
-    }
-    return maxDepth + 1
-  }
-
-  const currentDepth = calculateDepth(group.value)
-  return currentDepth < props.maxDepth
+  return props.currentDepth <= props.maxDepth
 })
 </script>
 
-<style scoped>
-.query-builder {
-  margin: 0;
-}
-
-.group {
-  padding: 0;
-}
-
-:deep(.n-card) {
-  border-radius: 12px;
-  border-color: #e4e4e7;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-:deep(.root-card) {
-  border: none;
-  box-shadow: none;
-}
-
-:deep(.n-card:not(.root-card):hover) {
-  border-color: #18a058;
-}
-
-:deep(.n-card-header) {
-  padding-bottom: 0;
-}
-</style>
+<style scoped></style>

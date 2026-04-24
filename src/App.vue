@@ -239,7 +239,13 @@ const toggleLocale = () => {
                     </n-button>
                   </n-space>
                 </template>
-                <QueryBuilder v-model="rules" :filters="filters" :max-depth="3" :size="size">
+                <QueryBuilder
+                  v-model="rules"
+                  :filters="filters"
+                  :max-depth="3"
+                  :size="size"
+                  :language="locale === 'vi' ? 'vi' : 'en'"
+                >
                   <!-- Example of custom slot for status -->
                   <template #active="{ rule, filter }">
                     <n-checkbox v-model:checked="rule.value">{{ filter.label }}</n-checkbox>
@@ -382,6 +388,14 @@ const toggleLocale = () => {
                         </n-space>
                       </n-space>
                       <n-space vertical align="end" :size="4">
+                        <div style="color: #64748b; font-size: 0.9rem">
+                          <a
+                            href="https://www.npmjs.com/package/@mvtcode/vue3-querybuilder-naive-ui"
+                            target="_blank"
+                            style="color: #18a058; text-decoration: none"
+                            >@mvtcode/vue3-querybuilder-naive-ui</a
+                          >
+                        </div>
                         <div style="color: #64748b; font-size: 0.9rem">
                           {{ t('app.emailLabel') }}:
                           <a
