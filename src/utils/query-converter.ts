@@ -434,7 +434,8 @@ export const toMnpQuery = (group: QueryBuilderGroup, filters: QueryBuilderFilter
       const operatorMnp = mapOperator[operator]
 
       if (
-        typeof value === 'undefined' &&
+        // [undefined, null].includes(value) &&
+        (value === undefined || value === null) &&
         ![Operator.IS_EMPTY, Operator.IS_NOT_EMPTY].includes(operator)
       )
         continue

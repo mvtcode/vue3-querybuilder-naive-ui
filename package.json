@@ -1,6 +1,6 @@
 {
   "name": "@mvtcode/vue3-querybuilder-naive-ui",
-  "version": "0.0.6",
+  "version": "0.0.8",
   "private": false,
   "description": "A powerful and flexible query builder component for Vue 3 with Naive UI",
   "keywords": [

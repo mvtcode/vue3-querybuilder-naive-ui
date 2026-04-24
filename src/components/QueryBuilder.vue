@@ -176,7 +176,9 @@ import type {
   QueryBuilderValue,
 } from '../types/querybuilder'
 import { FilterType, Operator, OperatorText } from '../types/querybuilder'
-import i18n from '../i18n'
+import { createI18n } from 'vue-i18n'
+import en from '../i18n/locales/en'
+import vi from '../i18n/locales/vi'
 
 interface Props {
   filters: QueryBuilderFilter[]
@@ -201,9 +203,25 @@ const props = withDefaults(defineProps<Props>(), {
   language: 'vi',
 })
 
-const t = (key: string) => {
-  return i18n.global.t(key, {}, { locale: props.language })
-}
+const i18n = createI18n({
+  legacy: false,
+  locale: 'en',
+  fallbackLocale: 'en',
+  messages: {
+    en,
+    vi,
+  },
+})
+
+const { t, locale } = i18n.global
+
+watch(
+  () => props.language,
+  (lang) => {
+    locale.value = lang
+  },
+  { immediate: true },
+)
 
 const emit = defineEmits<{
   (e: 'remove'): void
@@ -302,7 +320,7 @@ const getDefaultValue = (rule: QueryBuilderRule) => {
           return 0
         case FilterType.STRING:
         case FilterType.EMAIL:
-          return ''
+          return null
         case FilterType.BOOLEAN:
           return false
         case FilterType.DATE:
@@ -327,8 +345,8 @@ const onConditionChange = (value: boolean) => {
 }
 
 const onFieldChange = (rule: QueryBuilderRule) => {
-  rule.value = getDefaultValue(rule)
   rule.operator = getOperators.value(rule.field)[0].value
+  rule.value = getDefaultValue(rule)
 }
 
 const onOperatorChange = (rule: QueryBuilderRule) => {
