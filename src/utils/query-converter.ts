@@ -435,7 +435,7 @@ export const toMnpQuery = (group: QueryBuilderGroup, filters: QueryBuilderFilter
 
       if (
         // [undefined, null].includes(value) &&
-        (value === undefined || value === null) &&
+        (value === undefined || value === null || (Array.isArray(value) && value.length === 0)) &&
         ![Operator.IS_EMPTY, Operator.IS_NOT_EMPTY].includes(operator)
       )
         continue
