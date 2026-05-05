@@ -7,6 +7,8 @@ A powerful, highly flexible, and type-safe query builder component for Vue 3, el
 [![Vue Version](https://img.shields.io/badge/vue-3.x-4fc08d?style=flat-square&logo=vue.js)](https://vuejs.org/)
 [![UI Framework](https://img.shields.io/badge/UI-Naive%20UI-18a058?style=flat-square)](https://www.naiveui.com/)
 
+Live demo: [vue3-querybuilder-naive-ui](https://stackblitz.com/edit/vue3-querybuilder-naive-ui?file=src%2FApp.vue)
+
 ---
 
 > [!NOTE]
@@ -227,7 +229,7 @@ pnpm test:unit
 
 ## Example code
 
-Full example code can be found in the [App.vue](https://github.com/mvtcode/vue3-querybuilder-naive-ui/blob/main/src/App.vue) file.
+Full example code can be found in the [App.vue](https://stackblitz.com/edit/vue3-querybuilder-naive-ui?file=src%2FApp.vue) file.
 
 ## 📸 Screenshots
 
